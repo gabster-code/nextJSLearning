@@ -1,8 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UserHub - Next.js Authentication System
+
+A complete user authentication system built with:
+
+- Next.js 14 with App Router
+- NextAuth.js (Auth.js)
+- PostgreSQL with Prisma
+- Tailwind CSS
+- Shadcn UI
+
+## Features
+
+- Email/Password Authentication
+- Protected Routes
+- Profile Management
+- Session Handling
+- Type-safe Forms with Zod
+- Responsive Design
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repository:
+
+```bash
+git clone https://github.com/your-username/userhub.git
+```
+
+2. Navigate to the project directory:
+
+```bash
+cd userhub
+```
+
+3. Install the dependencies:
+
+```bash
+npm install
+```
+
+4. Start the development server:
 
 ```bash
 npm run dev
