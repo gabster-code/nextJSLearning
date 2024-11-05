@@ -56,14 +56,18 @@ export function ProfileForm({ user }: ProfileFormProps) {
         body: JSON.stringify(data),
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        throw new Error("Something went wrong");
+        throw new Error(responseData.error || "Something went wrong");
       }
 
-      toast.success("Profile updated!");
+      toast.success("Profile updated successfully!");
       router.refresh();
     } catch (error) {
-      toast.error("Something went wrong");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update profile"
+      );
     } finally {
       setIsLoading(false);
     }

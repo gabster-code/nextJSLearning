@@ -4,7 +4,14 @@ import { prisma } from "@/lib/db";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import type { NextAuthConfig } from "next-auth";
-import type { User as PrismaUser } from "@prisma/client";
+
+// Define our own User type since Prisma's is not accessible
+type User = {
+  id: string;
+  name: string | null;
+  email: string | null;
+  password: string | null;
+};
 
 // Define the type for credentials
 type Credentials = {
@@ -26,8 +33,8 @@ export const config = {
         password: { label: "Password", type: "password" },
       },
       async authorize(
-        credentials
-      ): Promise<Pick<PrismaUser, "id" | "email" | "name"> | null> {
+        credentials: Credentials | undefined
+      ): Promise<Partial<User> | null> {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
