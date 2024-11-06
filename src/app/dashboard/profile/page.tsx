@@ -1,11 +1,27 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { ProfileForm } from "@/components/dashboard/profile-form";
+import { prisma } from "@/lib/db";
 
 export default async function ProfilePage() {
   const session = await auth();
 
   if (!session?.user?.id) {
+    redirect("/auth/signin");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+      emailVerified: true,
+    },
+  });
+
+  if (!user) {
     redirect("/auth/signin");
   }
 
@@ -18,13 +34,7 @@ export default async function ProfilePage() {
         </p>
       </div>
       <div className="divide-y divide-border rounded-md border">
-        <ProfileForm
-          user={{
-            id: session.user.id,
-            name: session.user.name || null,
-            email: session.user.email || null,
-          }}
-        />
+        <ProfileForm user={user} />
       </div>
     </div>
   );

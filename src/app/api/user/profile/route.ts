@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import * as z from "zod";
+import { generateVerificationToken } from "@/lib/tokens";
+import { sendVerificationEmail } from "@/lib/email";
 
 const profileSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -21,18 +23,16 @@ export async function PATCH(req: Request) {
 
     const body = await req.json();
 
-    try {
-      const { name, email } = profileSchema.parse(body);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: error.errors[0].message },
-          { status: 400 }
-        );
-      }
+    // Validate the data
+    const validationResult = profileSchema.safeParse(body);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: validationResult.error.errors[0].message },
+        { status: 400 }
+      );
     }
 
-    const { name, email } = body;
+    const { name, email } = validationResult.data;
 
     // Check if email is already taken by another user
     const existingUser = await prisma.user.findFirst({
@@ -51,18 +51,51 @@ export async function PATCH(req: Request) {
       );
     }
 
-    await prisma.user.update({
+    // Update user profile
+    const updatedUser = await prisma.user.update({
       where: {
         id: session.user.id,
       },
       data: {
         name,
         email,
+        // Reset verification if email changed
+        emailVerified: email !== session.user.email ? null : undefined,
       },
     });
 
+    // If email changed, send new verification email
+    if (email !== session.user.email) {
+      const { token, expires } = generateVerificationToken();
+
+      // Save new verification token
+      await prisma.verificationToken.create({
+        data: {
+          identifier: email,
+          token,
+          expires,
+        },
+      });
+
+      // Update user's verification token
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: { verificationToken: token },
+      });
+
+      // Send verification email
+      await sendVerificationEmail(email, token);
+    }
+
     return NextResponse.json(
-      { message: "Profile updated successfully" },
+      {
+        message: "Profile updated successfully",
+        user: {
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+        },
+      },
       { status: 200 }
     );
   } catch (error) {

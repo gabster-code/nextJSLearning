@@ -5,14 +5,6 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import type { NextAuthConfig } from "next-auth";
 
-// Define our own User type since Prisma's is not accessible
-type User = {
-  id: string;
-  name: string | null;
-  email: string | null;
-  password: string | null;
-};
-
 // Define the type for credentials
 type Credentials = {
   email: string;
@@ -32,9 +24,7 @@ export const config = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(
-        credentials: Credentials | undefined
-      ): Promise<Partial<User> | null> {
+      async authorize(credentials: Credentials | undefined) {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
@@ -43,25 +33,31 @@ export const config = {
           where: {
             email: credentials.email,
           },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            password: true,
+          },
         });
 
         if (!user?.password) {
           return null;
         }
 
-        const isCorrectPassword = await bcrypt.compare(
+        const isPasswordValid = await bcrypt.compare(
           credentials.password,
           user.password
         );
 
-        if (!isCorrectPassword) {
+        if (!isPasswordValid) {
           return null;
         }
 
         return {
           id: user.id,
-          email: user.email,
           name: user.name,
+          email: user.email,
         };
       },
     }),

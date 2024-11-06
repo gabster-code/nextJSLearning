@@ -54,7 +54,11 @@ model User {
 
 
 
-  image         String?
+  image         String?   // URL to the S3 image
+
+
+
+  imageKey      String?   // S3 key for the image
 
 
 
@@ -75,6 +79,10 @@ model User {
 
 
   sessions      Session[]
+
+
+
+  verificationToken String? @unique
 
 
 
@@ -183,6 +191,38 @@ model Session {
 
 
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+
+
+}
+
+
+
+
+
+
+
+model VerificationToken {
+
+
+
+  identifier String
+
+
+
+  token      String   @unique
+
+
+
+  expires    DateTime
+
+
+
+
+
+
+
+  @@unique([identifier, token])
 
 
 

@@ -58,7 +58,7 @@ export function SignUpForm() {
         throw new Error(data.error || "Something went wrong");
       }
 
-      router.push("/auth/signin");
+      router.replace("/auth/register-success");
     } catch (error) {
       setError(error instanceof Error ? error.message : "Something went wrong");
     } finally {

@@ -1,9 +1,18 @@
 import { SignOutButton } from "@/components/auth/signout-button";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/db";
 
 export async function DashboardNav() {
   const session = await auth();
-  const user = session?.user;
+  const user = session?.user?.id
+    ? await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: {
+          name: true,
+          image: true,
+        },
+      })
+    : null;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -19,7 +28,7 @@ export async function DashboardNav() {
               <img
                 src={user.image}
                 alt={user.name || ""}
-                className="h-8 w-8 rounded-full"
+                className="h-8 w-8 rounded-full object-cover"
               />
             ) : (
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100">

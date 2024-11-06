@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { UploadImage } from "@/components/upload-image";
+import { VerificationStatus } from "@/components/dashboard/verification-status";
 
 const profileFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -29,6 +31,8 @@ interface ProfileFormProps {
     id: string;
     name?: string | null;
     email?: string | null;
+    image?: string | null;
+    emailVerified: Date | null;
   };
 }
 
@@ -73,9 +77,24 @@ export function ProfileForm({ user }: ProfileFormProps) {
     }
   }
 
+  const handleImageUpload = (imageUrl: string) => {
+    router.refresh();
+  };
+
+  const handleImageRemove = () => {
+    router.refresh();
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 p-4">
+        <div className="space-y-4">
+          <UploadImage
+            currentImage={user.image}
+            onUpload={handleImageUpload}
+            onRemove={handleImageRemove}
+          />
+        </div>
         <FormField
           control={form.control}
           name="name"
@@ -99,6 +118,12 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 <Input {...field} type="email" disabled={isLoading} />
               </FormControl>
               <FormMessage />
+              {user.email && (
+                <VerificationStatus
+                  email={user.email}
+                  isVerified={!!user.emailVerified}
+                />
+              )}
             </FormItem>
           )}
         />
