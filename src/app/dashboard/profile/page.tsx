@@ -4,6 +4,7 @@ import { ProfileForm } from "@/components/dashboard/profile-form";
 import { PasswordForm } from "@/components/dashboard/password-form";
 import { prisma } from "@/lib/db";
 import { Separator } from "@/components/ui/separator";
+import { DeleteAccountForm } from "@/components/dashboard/delete-account-form";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -46,6 +47,12 @@ export default async function ProfilePage() {
         </div>
         <div className="divide-y divide-border rounded-md border">
           <PasswordForm />
+        </div>
+      </div>
+      <Separator />
+      <div className="divide-y divide-border rounded-md border">
+        <div className="p-4">
+          <DeleteAccountForm />
         </div>
       </div>
     </div>

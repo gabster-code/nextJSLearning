@@ -82,6 +82,14 @@ model User {
 
 
 
+  userSessions  UserSession[]
+
+
+
+  loginHistory  LoginHistory[]
+
+
+
   verificationToken String? @unique
 
 
@@ -259,6 +267,82 @@ model PasswordResetToken {
 
 
   @@unique([email, token])
+
+
+
+}
+
+
+
+model UserSession {
+
+
+
+  id           String    @id @default(cuid())
+
+
+
+  userId       String
+
+
+
+  deviceInfo   String    // Browser, OS, etc.
+
+
+
+  ipAddress    String
+
+
+
+  lastActive   DateTime  @default(now())
+
+
+
+  isValid      Boolean   @default(true)
+
+
+
+  createdAt    DateTime  @default(now())
+
+
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+
+
+}
+
+
+
+model LoginHistory {
+
+
+
+  id           String    @id @default(cuid())
+
+
+
+  userId       String
+
+
+
+  ipAddress    String
+
+
+
+  deviceInfo   String
+
+
+
+  status       String    // success, failed, blocked
+
+
+
+  createdAt    DateTime  @default(now())
+
+
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
 
 
