@@ -229,3 +229,39 @@ model VerificationToken {
 }
 
 
+
+model PasswordResetToken {
+
+
+
+  id         String   @id @default(cuid())
+
+
+
+  email      String
+
+
+
+  token      String   @unique
+
+
+
+  expires    DateTime
+
+
+
+  createdAt  DateTime @default(now())
+
+
+
+
+
+
+
+  @@unique([email, token])
+
+
+
+}
+
+
