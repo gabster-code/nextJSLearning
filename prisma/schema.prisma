@@ -94,6 +94,18 @@ model User {
 
 
 
+  @@index([email])
+
+
+
+  @@index([createdAt])
+
+
+
+  @@index([updatedAt])
+
+
+
 }
 
 
@@ -310,6 +322,14 @@ model UserSession {
 
 
 
+  @@index([userId, isValid])
+
+
+
+  @@index([lastActive])
+
+
+
 }
 
 
@@ -343,6 +363,14 @@ model LoginHistory {
 
 
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+
+
+  @@index([userId, createdAt])
+
+
+
+  @@index([status])
 
 
 
