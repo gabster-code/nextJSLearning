@@ -35,17 +35,17 @@ export const config = {
           },
         });
 
-        if (!user?.password) {
-          return null;
+        if (!user || !user.password) {
+          throw new Error("AccountNotFound");
         }
 
-        const isCorrectPassword = await bcrypt.compare(
+        const isPasswordValid = await bcrypt.compare(
           credentials.password as string,
           user.password
         );
 
-        if (!isCorrectPassword) {
-          return null;
+        if (!isPasswordValid) {
+          throw new Error("InvalidCredentials");
         }
 
         return {

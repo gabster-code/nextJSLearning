@@ -1,8 +1,11 @@
 "use client";
 
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -13,37 +16,63 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
 import Link from "next/link";
+
+const formSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 export function SignInForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const searchParams = useSearchParams();
 
-  const form = useForm({
+  // Show error from URL if present
+  const errorType = searchParams.get("error");
+  if (errorType === "CredentialsSignin") {
+    setError("Account not found");
+  }
+
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
       password: "",
     },
   });
 
-  const onSubmit = async (values: { email: string; password: string }) => {
+  const onSubmit = async (values: FormData) => {
     try {
-      const signInResult = await signIn("credentials", {
+      setIsLoading(true);
+      setError(null);
+
+      const result = await signIn("credentials", {
         email: values.email,
         password: values.password,
         redirect: false,
       });
 
-      if (signInResult?.error) {
-        setError("Invalid credentials");
+      if (result?.error) {
+        if (result.error === "AccountNotFound") {
+          setError("Account not found");
+        } else if (result.error === "InvalidCredentials") {
+          setError("Invalid email or password");
+        } else {
+          setError("Invalid email or password");
+        }
         return;
       }
 
       router.refresh();
       router.push("/dashboard");
     } catch (error) {
-      setError("Something went wrong");
+      setError("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -57,7 +86,12 @@ export function SignInForm() {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="Email" {...field} />
+                <Input
+                  type="email"
+                  placeholder="Email"
+                  {...field}
+                  disabled={isLoading}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -70,29 +104,36 @@ export function SignInForm() {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="Password" {...field} />
+                <Input
+                  type="password"
+                  placeholder="Password"
+                  {...field}
+                  disabled={isLoading}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        {error && <div className="text-sm text-red-500">{error}</div>}
-        <div className="flex items-center justify-end">
+        {error && (
+          <div className="text-sm text-red-500 font-medium">{error}</div>
+        )}
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "Signing in..." : "Sign In"}
+        </Button>
+        <div className="text-sm text-center space-y-2">
           <Link
             href="/auth/forgot-password"
-            className="text-sm text-primary hover:underline"
+            className="text-primary hover:underline"
           >
             Forgot password?
           </Link>
-        </div>
-        <Button type="submit" className="w-full">
-          Sign In
-        </Button>
-        <div className="text-sm text-center">
-          Don&apos;t have an account?{" "}
-          <Link href="/auth/signup" className="text-primary hover:underline">
-            Sign Up
-          </Link>
+          <div>
+            Don&apos;t have an account?{" "}
+            <Link href="/auth/signup" className="text-primary hover:underline">
+              Sign Up
+            </Link>
+          </div>
         </div>
       </form>
     </Form>
