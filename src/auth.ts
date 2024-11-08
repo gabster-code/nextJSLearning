@@ -4,13 +4,6 @@ import { prisma } from "@/lib/db";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import type { NextAuthConfig } from "next-auth";
-import { headers } from "next/headers";
-
-// Define the type for credentials
-type Credentials = {
-  email: string;
-  password: string;
-};
 
 export const config = {
   adapter: PrismaAdapter(prisma),
@@ -25,14 +18,14 @@ export const config = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials: Credentials | undefined) {
+      async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
 
         const user = await prisma.user.findUnique({
           where: {
-            email: credentials.email,
+            email: credentials.email as string,
           },
           select: {
             id: true,
@@ -46,12 +39,12 @@ export const config = {
           return null;
         }
 
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
+        const isCorrectPassword = await bcrypt.compare(
+          credentials.password as string,
           user.password
         );
 
-        if (!isPasswordValid) {
+        if (!isCorrectPassword) {
           return null;
         }
 
@@ -75,35 +68,6 @@ export const config = {
         session.user.id = token.id as string;
       }
       return session;
-    },
-    async signIn({ user }) {
-      try {
-        const headersList = headers();
-        const ipAddress =
-          process.env.NODE_ENV === "development"
-            ? "127.0.0.1 (localhost)"
-            : headersList.get("x-forwarded-for") ||
-              headersList.get("x-real-ip") ||
-              "unknown";
-
-        // Track successful login
-        await fetch(`${process.env.AUTH_URL}/api/auth/track-login`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: user.id,
-            status: "success",
-            ipAddress,
-          }),
-        });
-
-        return true;
-      } catch (error) {
-        console.error("Sign in callback error:", error);
-        return true; // Still allow sign in even if tracking fails
-      }
     },
   },
 } satisfies NextAuthConfig;
