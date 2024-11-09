@@ -27,16 +27,10 @@ export const config = {
           where: {
             email: credentials.email as string,
           },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            password: true,
-          },
         });
 
-        if (!user || !user.password) {
-          throw new Error("AccountNotFound");
+        if (!user?.password) {
+          return null;
         }
 
         const isPasswordValid = await bcrypt.compare(
@@ -45,14 +39,10 @@ export const config = {
         );
 
         if (!isPasswordValid) {
-          throw new Error("InvalidCredentials");
+          return null;
         }
 
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-        };
+        return user;
       },
     }),
   ],
