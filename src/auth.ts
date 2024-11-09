@@ -11,7 +11,6 @@ export const config = {
   pages: {
     signIn: "/auth/signin",
     error: "/auth/error",
-    verifyRequest: "/auth/verify",
   },
   providers: [
     CredentialsProvider({

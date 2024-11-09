@@ -1,13 +1,20 @@
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Reset Password",
+  description: "Reset your password",
+};
 
 interface ResetPasswordPageProps {
   searchParams: { [key: string]: string | string[] | undefined };
 }
 
-export default async function ResetPasswordPage({
+export default function ResetPasswordPage({
   searchParams,
 }: ResetPasswordPageProps) {
-  const token = searchParams.token as string | undefined;
+  const token =
+    typeof searchParams.token === "string" ? searchParams.token : undefined;
 
   return (
     <div className="container flex h-screen w-screen flex-col items-center justify-center">
