@@ -19,13 +19,12 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
-  const isDevelopment = process.env.NODE_ENV === "development";
 
   return (
     <html lang="en">
       <body className={inter.className}>
         <SessionProvider session={session}>
-          {isDevelopment && <DevelopmentBanner />}
+          <DevelopmentBanner />
           <main className="min-h-screen bg-background">{children}</main>
           <Toaster />
         </SessionProvider>
