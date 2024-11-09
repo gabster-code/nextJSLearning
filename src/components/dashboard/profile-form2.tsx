@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -23,96 +22,76 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
+import { PasswordStrength } from "@/components/ui/password-strength";
 import { toast } from "sonner";
-import { UploadImage } from "@/components/upload-image";
-import { VerificationStatus } from "@/components/dashboard/verification-status";
 
-const profileFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address"),
-});
+const passwordFormSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: z
+      .string()
+      .min(6, "Password must be at least 6 characters")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+      ),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
-type ProfileFormValues = z.infer<typeof profileFormSchema>;
+type PasswordFormValues = z.infer<typeof passwordFormSchema>;
 
-interface ProfileFormProps {
-  user: {
-    id: string;
-    name?: string | null;
-    email?: string | null;
-    image?: string | null;
-    emailVerified: Date | null;
-  };
-}
-
-export function ProfileForm2({ user }: ProfileFormProps) {
-  const router = useRouter();
+export function ProfileForm2() {
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
+  const form = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordFormSchema),
     defaultValues: {
-      name: user.name || "",
-      email: user.email || "",
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
     },
   });
 
-  async function onSubmit(data: ProfileFormValues) {
+  const newPassword = form.watch("newPassword");
+
+  async function onSubmit(values: PasswordFormValues) {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/user/profile", {
+      const response = await fetch("/api/user/password", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          currentPassword: values.currentPassword,
+          newPassword: values.newPassword,
+        }),
       });
 
-      const responseData = await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(responseData.error || "Something went wrong");
+        throw new Error(data.error);
       }
 
-      toast.success("Profile updated successfully!");
-      router.refresh();
+      toast.success("Password updated successfully");
+      form.reset();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to update profile"
+        error instanceof Error ? error.message : "Failed to update password"
       );
     } finally {
       setIsLoading(false);
     }
   }
 
-  const handleImageUpload = (imageUrl: string) => {
-    router.refresh();
-  };
-
-  const handleImageRemove = () => {
-    router.refresh();
-  };
-
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile Picture</CardTitle>
-          <CardDescription>Change your profile picture here.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <UploadImage
-              currentImage={user.image}
-              onUpload={handleImageUpload}
-              onRemove={handleImageRemove}
-            />
-          </div>
-        </CardContent>
-      </Card>
       <Card>
         <CardHeader>
           <CardTitle>Personal Information</CardTitle>
@@ -121,18 +100,20 @@ export function ProfileForm2({ user }: ProfileFormProps) {
 
         <CardContent>
           <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-8 p-4"
-            >
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="name"
+                name="currentPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>Current Password</FormLabel>
                     <FormControl>
-                      <Input {...field} disabled={isLoading} />
+                      <Input
+                        type="password"
+                        placeholder="Enter current password"
+                        disabled={isLoading}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -140,25 +121,43 @@ export function ProfileForm2({ user }: ProfileFormProps) {
               />
               <FormField
                 control={form.control}
-                name="email"
+                name="newPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>New Password</FormLabel>
                     <FormControl>
-                      <Input {...field} type="email" disabled={isLoading} />
+                      <Input
+                        type="password"
+                        placeholder="Enter new password"
+                        disabled={isLoading}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
-                    {user.email && (
-                      <VerificationStatus
-                        email={user.email}
-                        isVerified={!!user.emailVerified}
+                    {newPassword && <PasswordStrength password={newPassword} />}
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm New Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="Confirm new password"
+                        disabled={isLoading}
+                        {...field}
                       />
-                    )}
+                    </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Saving..." : "Save changes"}
+                {isLoading ? "Updating..." : "Update Password"}
               </Button>
             </form>
           </Form>

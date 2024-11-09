@@ -29,6 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { UploadImage } from "@/components/upload-image";
 import { VerificationStatus } from "@/components/dashboard/verification-status";
+import { Separator } from "@/components/ui/separator";
 
 const profileFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -113,6 +114,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
           </div>
         </CardContent>
       </Card>
+      <Separator />
       <Card>
         <CardHeader>
           <CardTitle>Personal Information</CardTitle>
