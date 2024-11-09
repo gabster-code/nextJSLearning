@@ -1,24 +1,32 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { headers } from "next/headers";
 
-export async function DELETE(
-  req: Request,
-  context: { params: { sessionId: string } }
-) {
+interface RouteParams {
+  params: {
+    sessionId: string;
+  };
+}
+
+export async function DELETE(request: Request, { params }: RouteParams) {
   try {
     const session = await auth();
-    const sessionId = context.params.sessionId;
-
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Find the session and ensure it belongs to the user
-    const userSession = await prisma.userSession.findUnique({
+    const { sessionId } = params;
+
+    // Get session details
+    const userSession = await prisma.userSession.findFirst({
       where: {
         id: sessionId,
         userId: session.user.id,
+      },
+      select: {
+        id: true,
+        deviceInfo: true,
       },
     });
 
@@ -26,18 +34,21 @@ export async function DELETE(
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
-    // Terminate the session
-    await prisma.userSession.update({
-      where: { id: sessionId },
-      data: { isValid: false },
+    // Check if this is the current session
+    const headersList = headers();
+    const currentUserAgent = headersList.get("user-agent") || "unknown";
+    const sessionUserAgent = JSON.parse(userSession.deviceInfo).userAgent;
+    const isCurrentSession = currentUserAgent === sessionUserAgent;
+
+    // Delete session
+    await prisma.userSession.delete({
+      where: {
+        id: sessionId,
+      },
     });
 
-    // Check if this is the current session
-    const isCurrentSession =
-      userSession.deviceInfo === req.headers.get("user-agent");
-
     return NextResponse.json({
-      message: "Session terminated",
+      message: "Session terminated successfully",
       isCurrentSession,
     });
   } catch (error) {
