@@ -5,6 +5,11 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import type { NextAuthConfig } from "next-auth";
 
+interface Credentials {
+  email: string;
+  password: string;
+}
+
 export const config = {
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
@@ -18,7 +23,7 @@ export const config = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials: Credentials | undefined) {
         try {
           if (!credentials?.email || !credentials?.password) {
             return null;
@@ -26,7 +31,7 @@ export const config = {
 
           const user = await prisma.user.findUnique({
             where: {
-              email: credentials.email,
+              email: credentials.email as string,
             },
           });
 
@@ -35,7 +40,7 @@ export const config = {
           }
 
           const isPasswordValid = await bcrypt.compare(
-            credentials.password,
+            credentials.password as string,
             user.password
           );
 
