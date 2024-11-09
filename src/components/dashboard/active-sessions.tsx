@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { Laptop, Smartphone, Globe } from "lucide-react";
 import { signOut } from "next-auth/react";
+import { headers } from "next/headers";
 
 interface Session {
   id: string;
@@ -33,22 +34,29 @@ export function ActiveSessions({ sessions }: ActiveSessionsProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error("Failed to terminate session");
+        throw new Error(data.error || "Failed to terminate session");
       }
 
       // Add to terminated sessions list
       setTerminatedSessions((prev) => [...prev, sessionId]);
       toast.success("Session terminated successfully");
 
-      // If current session was terminated, sign out
-      if (data.isCurrentSession) {
+      // Check if current session was terminated
+      const currentUserAgent = window.navigator.userAgent;
+      const sessionUserAgent = JSON.parse(
+        sessions.find((s) => s.id === sessionId)?.deviceInfo || "{}"
+      ).userAgent;
+
+      if (currentUserAgent === sessionUserAgent) {
         toast.message("Your current session was terminated. Signing out...");
         setTimeout(() => {
           signOut({ callbackUrl: "/auth/signin" });
-        }, 2000); // Give time for the toast to be seen
+        }, 2000);
       }
     } catch (error) {
-      toast.error("Failed to terminate session");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to terminate session"
+      );
     } finally {
       setIsLoading(null);
     }

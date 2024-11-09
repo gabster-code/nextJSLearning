@@ -1,10 +1,53 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { formatDeviceInfo } from "@/lib/device-info";
-import { format } from "date-fns";
 import { ActiveSessions } from "@/components/dashboard/active-sessions";
 import { LoginHistory } from "@/components/dashboard/login-history";
+import { cache } from "react";
+
+// Cache the session data fetching
+const getSessionData = cache(async (userId: string) => {
+  try {
+    const [activeSessions, loginHistory] = await Promise.all([
+      prisma.userSession.findMany({
+        where: {
+          userId,
+          isValid: true,
+        },
+        orderBy: {
+          lastActive: "desc",
+        },
+        select: {
+          id: true,
+          deviceInfo: true,
+          ipAddress: true,
+          lastActive: true,
+        },
+      }),
+      prisma.loginHistory.findMany({
+        where: {
+          userId,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 10,
+        select: {
+          id: true,
+          status: true,
+          deviceInfo: true,
+          ipAddress: true,
+          createdAt: true,
+        },
+      }),
+    ]);
+
+    return { activeSessions, loginHistory };
+  } catch (error) {
+    console.error("Error fetching session data:", error);
+    return { activeSessions: [], loginHistory: [] };
+  }
+});
 
 export default async function SessionsPage() {
   const session = await auth();
@@ -13,27 +56,9 @@ export default async function SessionsPage() {
     redirect("/auth/signin");
   }
 
-  // Get active sessions for current user only
-  const activeSessions = await prisma.userSession.findMany({
-    where: {
-      userId: session.user.id, // Filter by current user's ID
-      isValid: true,
-    },
-    orderBy: {
-      lastActive: "desc",
-    },
-  });
-
-  // Get login history for current user only
-  const loginHistory = await prisma.loginHistory.findMany({
-    where: {
-      userId: session.user.id, // Filter by current user's ID
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 10, // Last 10 login attempts
-  });
+  const { activeSessions, loginHistory } = await getSessionData(
+    session.user.id
+  );
 
   return (
     <div className="space-y-6">
