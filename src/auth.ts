@@ -5,6 +5,12 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import type { NextAuthConfig } from "next-auth";
 
+declare module "next-auth" {
+  interface User {
+    emailVerified?: Date | null
+  }
+}
+
 export const config = {
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
