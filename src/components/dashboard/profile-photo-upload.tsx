@@ -1,119 +1,94 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UploadImage } from "@/components/upload-image";
-import { VerificationStatus } from "@/components/dashboard/verification-status";
-import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
-const profileFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address"),
-});
-
-type ProfileFormValues = z.infer<typeof profileFormSchema>;
-
-interface ProfileFormProps {
+interface ProfilePhotoUploadProps {
   user: {
     id: string;
-    name?: string | null;
-    email?: string | null;
-    image?: string | null;
-    emailVerified?: Date | null;
+    name: string | null;
+    email: string | null;
+    image: string | null;
   };
 }
 
-export function ProfilePhotoUpload({ user }: ProfileFormProps) {
-  const router = useRouter();
+export function ProfilePhotoUpload({ user }: ProfilePhotoUploadProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(user.image);
 
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      name: user.name || "",
-      email: user.email || "",
-    },
-  });
-
-  async function onSubmit(data: ProfileFormValues) {
-    setIsLoading(true);
-
+  const onUpload = async (url: string) => {
     try {
-      const response = await fetch("/api/user/profile", {
+      setIsLoading(true);
+      const response = await fetch("/api/user/profile-photo", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ image: url }),
       });
 
-      const responseData = await response.json();
+      if (!response.ok) throw new Error("Failed to update profile photo");
 
-      if (!response.ok) {
-        throw new Error(responseData.error || "Something went wrong");
-      }
-
-      toast.success("Profile updated successfully!");
-      router.refresh();
+      setImageUrl(url);
+      toast.success("Profile photo updated");
+      // Force reload to update nav avatar
+      window.location.reload();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to update profile"
-      );
+      toast.error("Error updating profile photo");
     } finally {
       setIsLoading(false);
     }
-  }
-
-  const handleImageUpload = (imageUrl: string) => {
-    router.refresh();
   };
 
-  const handleImageRemove = () => {
-    router.refresh();
+  const onRemove = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/user/profile-photo", {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Failed to remove profile photo");
+
+      setImageUrl(null);
+      toast.success("Profile photo removed");
+      // Force reload to update nav avatar
+      window.location.reload();
+    } catch (error) {
+      toast.error("Error removing profile photo");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile Picture</CardTitle>
-          <CardDescription>Change your profile picture here.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <UploadImage
-              currentImage={user.image}
-              onUpload={handleImageUpload}
-              onRemove={handleImageRemove}
-            />
+    <div className="p-4">
+      <div className="flex items-center gap-x-6">
+        <Avatar className="h-20 w-20">
+          <AvatarImage src={imageUrl || undefined} />
+          <AvatarFallback>{user.name?.[0]}</AvatarFallback>
+        </Avatar>
+        <div className="space-y-4">
+          <div className="flex items-center gap-x-2">
+            <UploadImage onUpload={onUpload} />
+            {imageUrl && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onRemove}
+                disabled={isLoading}
+              >
+                Remove
+              </Button>
+            )}
           </div>
-        </CardContent>
-      </Card>
-    </>
+          <p className="text-sm text-muted-foreground">
+            Upload a photo for your profile.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

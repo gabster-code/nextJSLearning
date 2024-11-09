@@ -1,15 +1,8 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { ProfileForm } from "@/components/dashboard/profile-form";
-import { ProfileForm2 } from "@/components/dashboard/profile-form2";
-import { PasswordForm } from "@/components/dashboard/password-form";
-import { Separator } from "@/components/ui/separator";
-import { DeleteAccountForm } from "@/components/dashboard/delete-account-form";
 import { ProfilePhotoUpload } from "@/components/dashboard/profile-photo-upload";
-import { UploadImage } from "@/components/upload-image";
-
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+import { Separator } from "@/components/ui/separator";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -17,6 +10,14 @@ export default async function ProfilePage() {
   if (!session?.user?.id) {
     redirect("/auth/signin");
   }
+
+  const user = {
+    id: session.user.id,
+    name: session.user.name,
+    email: session.user.email,
+    image: session.user.image,
+    emailVerified: session.user.emailVerified,
+  };
 
   return (
     <div className="space-y-6">
@@ -28,21 +29,11 @@ export default async function ProfilePage() {
       </div>
       <div className="space-y-6">
         <div className="divide-y divide-border rounded-md border">
-          <ProfilePhotoUpload user={session.user} />
+          <ProfilePhotoUpload user={user} />
         </div>
         <Separator />
         <div className="divide-y divide-border rounded-md border">
-          <ProfileForm user={session.user} />
-        </div>
-        <Separator />
-        <div className="divide-y divide-border rounded-md border">
-          <PasswordForm />
-        </div>
-      </div>
-      <Separator />
-      <div className="divide-y divide-border rounded-md border">
-        <div className="p-4">
-          <DeleteAccountForm />
+          <ProfileForm user={user} />
         </div>
       </div>
     </div>
