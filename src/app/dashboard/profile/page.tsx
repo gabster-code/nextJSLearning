@@ -5,6 +5,7 @@ import { ProfileForm2 } from "@/components/dashboard/profile-form2";
 import { PasswordForm } from "@/components/dashboard/password-form";
 import { Separator } from "@/components/ui/separator";
 import { DeleteAccountForm } from "@/components/dashboard/delete-account-form";
+import { ProfilePhotoUpload } from "@/components/dashboard/profile-photo-upload";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -25,6 +26,7 @@ export default async function ProfilePage() {
         </p>
       </div>
       <div className="space-y-6">
+        <Separator />
         <div className="divide-y divide-border rounded-md border">
           <ProfileForm user={session.user} />
         </div>
