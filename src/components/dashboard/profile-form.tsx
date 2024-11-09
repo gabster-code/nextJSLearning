@@ -44,7 +44,7 @@ interface ProfileFormProps {
     name?: string | null;
     email?: string | null;
     image?: string | null;
-    emailVerified: Date | null;
+    emailVerified?: Date | null;
   };
 }
 

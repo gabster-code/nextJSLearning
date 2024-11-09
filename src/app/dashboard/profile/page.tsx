@@ -29,7 +29,6 @@ export default async function ProfilePage() {
           <ProfileForm user={session.user} />
         </div>
         <Separator />
-
         <div className="divide-y divide-border rounded-md border">
           <PasswordForm />
         </div>
