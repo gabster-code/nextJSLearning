@@ -72,7 +72,7 @@ export function ProfilePhotoUpload({ user }: ProfilePhotoUploadProps) {
         </Avatar>
         <div className="space-y-4">
           <div className="flex items-center gap-x-2">
-            <UploadImage onUpload={onUpload} />
+            <UploadImage onUpload={onUpload} onRemove={onRemove} />
             {imageUrl && (
               <Button
                 variant="outline"

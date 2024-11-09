@@ -58,11 +58,16 @@ export function Nav({ user }: NavProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.image} alt={user.name} />
-                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                    <AvatarImage
+                      src={user?.image || undefined}
+                      alt={user?.name ?? undefined}
+                    />
+                    <AvatarFallback>
+                      {user?.name?.charAt(0) ?? "?"}
+                    </AvatarFallback>
                   </Avatar>
                   <span className="ml-2 text-sm font-medium hidden sm:block">
-                    {user.name}
+                    {user?.name}
                   </span>
                 </Button>
               </DropdownMenuTrigger>
