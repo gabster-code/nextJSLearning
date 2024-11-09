@@ -3,7 +3,7 @@ import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendVerificationEmail(email: string, token: string) {
-  const confirmLink = `${process.env.AUTH_URL}/auth/verify?token=${token}`;
+  const verifyUrl = `${process.env.NEXTAUTH_URL}/auth/verify?token=${token}`;
   const isDevelopment = process.env.NODE_ENV === "development";
 
   try {
@@ -14,7 +14,7 @@ export async function sendVerificationEmail(email: string, token: string) {
       html: `
         <h1>Verify your email</h1>
         <p>Click the link below to verify your email address:</p>
-        <a href="${confirmLink}">Verify Email</a>
+        <a href="${verifyUrl}">Verify Email</a>
         ${isDevelopment ? `<p>Original recipient: ${email}</p>` : ""}
       `,
     });
@@ -32,7 +32,7 @@ export async function sendVerificationEmail(email: string, token: string) {
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  const resetLink = `${process.env.AUTH_URL}/auth/reset-password?token=${token}`;
+  const resetUrl = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${token}`;
   const isDevelopment = process.env.NODE_ENV === "development";
 
   try {
@@ -43,7 +43,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
       html: `
         <h1>Reset your password</h1>
         <p>Click the link below to reset your password. This link will expire in 1 hour.</p>
-        <a href="${resetLink}">Reset Password</a>
+        <a href="${resetUrl}">Reset Password</a>
         ${isDevelopment ? `<p>Original recipient: ${email}</p>` : ""}
       `,
     });
