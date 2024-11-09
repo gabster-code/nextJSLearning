@@ -10,6 +10,8 @@ export const config = {
   session: { strategy: "jwt" },
   pages: {
     signIn: "/auth/signin",
+    error: "/auth/error",
+    verifyRequest: "/auth/verify",
   },
   providers: [
     CredentialsProvider({
