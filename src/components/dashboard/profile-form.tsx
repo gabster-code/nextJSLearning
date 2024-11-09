@@ -101,22 +101,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Profile Picture</CardTitle>
-          <CardDescription>Change your profile picture here.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <UploadImage
-              currentImage={user.image}
-              onUpload={handleImageUpload}
-              onRemove={handleImageRemove}
-            />
-          </div>
-        </CardContent>
-      </Card>
-      <Separator />
-      <Card>
-        <CardHeader>
           <CardTitle>Personal Information</CardTitle>
           <CardDescription>Update your personal details here.</CardDescription>
         </CardHeader>
