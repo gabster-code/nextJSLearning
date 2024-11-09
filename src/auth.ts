@@ -7,7 +7,7 @@ import type { NextAuthConfig } from "next-auth";
 
 declare module "next-auth" {
   interface User {
-    emailVerified?: Date | null
+    emailVerified?: Date | null;
   }
 }
 
